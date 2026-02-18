@@ -7,6 +7,11 @@ export interface ListItemData {
     avatar: string;
 }
 
+export interface VirtualRowData {
+    data: ListItemData[];
+    updateItemStatus: (id: string | number) => void;
+}
+
 export interface WorkerResponse {
     type: 'SUCCESS' | 'ERROR';
     data?: ListItemData[];
