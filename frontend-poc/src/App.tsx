@@ -15,6 +15,7 @@ function App() {
   const [query, setQuery] = useState('');
   const [isLegacyMode, setIsLegacyMode] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
+  const skeletonRows = Array.from({ length: 7 }, (_, index) => index);
 
   useEffect(() => {
     searchData(debouncedQuery);
@@ -49,59 +50,62 @@ function App() {
       </header>
 
       <main className="max-w-7xl mx-auto">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center p-20 space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-            <p className="text-primary-400 font-medium animate-pulse">Generating 50,000 data items...</p>
+        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm relative">
+          {/* Metrics Overlay */}
+          <div className="absolute top-4 right-4 z-10 bg-black/80 border border-slate-700 p-3 rounded-lg text-xs font-mono shadow-lg backdrop-blur-md">
+            <div className="text-slate-400 mb-1">Items in Memory</div>
+            <div className="text-emerald-400 font-bold text-lg">{data.length.toLocaleString()}</div>
+            <div className="mt-2 text-slate-500">Check Console for Profiler</div>
           </div>
-        ) : error ? (
-          <div className="bg-red-900/20 border border-red-500/50 p-4 rounded-xl text-red-400">
-            <p>{error}</p>
-          </div>
-        ) : (
-          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm relative">
-            {/* Metrics Overlay */}
-            <div className="absolute top-4 right-4 z-10 bg-black/80 border border-slate-700 p-3 rounded-lg text-xs font-mono shadow-lg backdrop-blur-md">
-              <div className="text-slate-400 mb-1">Items in Memory</div>
-              <div className="text-emerald-400 font-bold text-lg">{data.length.toLocaleString()}</div>
-              <div className="mt-2 text-slate-500">Check Console for Profiler</div>
-            </div>
 
-            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/80">
-              <h2 className="text-xl font-semibold">Data Stream</h2>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 text-sm text-slate-300">
-                  <input
-                    type="checkbox"
-                    checked={isLegacyMode}
-                    onChange={(event) => setIsLegacyMode(event.target.checked)}
-                    className="h-4 w-4 accent-amber-400"
-                  />
-                  Enable Legacy Mode (Caution: Lag)
-                </label>
-                <div className="text-sm px-3 py-1 bg-primary-500/10 text-primary-400 rounded-full border border-primary-500/20">
-                  {data.length.toLocaleString()} Items Loaded
-                </div>
+          <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/80">
+            <h2 className="text-xl font-semibold">Data Stream</h2>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={isLegacyMode}
+                  onChange={(event) => setIsLegacyMode(event.target.checked)}
+                  className="h-4 w-4 accent-amber-400"
+                />
+                Enable Legacy Mode (Caution: Lag)
+              </label>
+              <div className="text-sm px-3 py-1 bg-primary-500/10 text-primary-400 rounded-full border border-primary-500/20">
+                {data.length.toLocaleString()} Items Loaded
               </div>
             </div>
-
-            <Toolbar query={query} onQueryChange={setQuery} />
-
-            <div className="h-[600px] w-full bg-slate-900/30">
-              {isLegacyMode ? (
-                <LegacyList data={data} onUpdateStatus={updateItemStatus} />
-              ) : (
-                <Profiler id="VirtualList" onRender={onRenderCallback}>
-                  <ListContainer
-                    data={data}
-                    RowComponent={Row}
-                    onUpdateStatus={updateItemStatus}
-                  />
-                </Profiler>
-              )}
-            </div>
           </div>
-        )}
+
+          <Toolbar query={query} onQueryChange={setQuery} />
+
+          <div className="h-[600px] w-full bg-slate-900/30">
+            {isLoading ? (
+              <div className="h-full w-full overflow-hidden">
+                {skeletonRows.map((index) => (
+                  <div key={index} className="h-[88px] px-4 py-2">
+                    <div className="h-full w-full rounded-lg border border-slate-800/80 bg-slate-800/30 animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              <div className="h-full w-full flex items-center justify-center p-6">
+                <div className="bg-red-900/20 border border-red-500/50 p-4 rounded-xl text-red-400">
+                  <p>{error}</p>
+                </div>
+              </div>
+            ) : isLegacyMode ? (
+              <LegacyList data={data} onUpdateStatus={updateItemStatus} />
+            ) : (
+              <Profiler id="VirtualList" onRender={onRenderCallback}>
+                <ListContainer
+                  data={data}
+                  RowComponent={Row}
+                  onUpdateStatus={updateItemStatus}
+                />
+              </Profiler>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   )

@@ -4,6 +4,7 @@ import { List } from 'react-window';
 import type { RowComponentProps } from 'react-window';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
 import type { ListItemData, VirtualRowData } from '../../types/data';
+import { NoResults } from '../NoResults';
 
 interface ListContainerProps {
   data: ListItemData[];
@@ -23,6 +24,14 @@ export const ListContainer: React.FC<ListContainerProps> = ({ data, RowComponent
     (props: RowComponentProps<VirtualRowData>) => <RowComponent {...props} />,
     [RowComponent]
   );
+
+  if (data.length === 0) {
+    return (
+      <div className="h-full w-full">
+        <NoResults />
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: '100%', height: '100%' }}>

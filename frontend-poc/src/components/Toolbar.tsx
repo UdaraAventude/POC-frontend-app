@@ -11,14 +11,17 @@ export const Toolbar = ({ query, onQueryChange }: ToolbarProps) => {
     const [domCount, setDomCount] = useState<number>(0);
 
     useEffect(() => {
-        // Initial check
-        setDomCount(document.querySelectorAll('*').length);
-
-        const intervalId = setInterval(() => {
+        const updateDomCount = () => {
             setDomCount(document.querySelectorAll('*').length);
-        }, 1000);
+        };
 
-        return () => clearInterval(intervalId);
+        const timeoutId = window.setTimeout(updateDomCount, 0);
+        const intervalId = window.setInterval(updateDomCount, 1000);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+            window.clearInterval(intervalId);
+        };
     }, []);
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {

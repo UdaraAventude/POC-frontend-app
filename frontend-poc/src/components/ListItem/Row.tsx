@@ -5,6 +5,29 @@ import type { VirtualRowData } from '../../types/data';
 
 type RowProps = RowComponentProps<VirtualRowData>;
 
+const getInitials = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+        return '?';
+    }
+
+    const parts = trimmed.split(/\s+/);
+    const first = parts[0]?.[0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? '' : parts[0]?.[1] ?? '';
+
+    return (first + last).toUpperCase();
+};
+
+const getColorFromInitials = (name: string) => {
+    let hash = 0;
+    for (let index = 0; index < name.length; index += 1) {
+        hash = name.charCodeAt(index) + ((hash << 5) - hash);
+    }
+
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue} 65% 45%)`;
+};
+
 const RowComponent: React.FC<RowProps> = ({ index, style, data, updateItemStatus, ariaAttributes }) => {
     // Access the specific item data using the index
     const item = data[index];
@@ -24,6 +47,9 @@ const RowComponent: React.FC<RowProps> = ({ index, style, data, updateItemStatus
         console.log(`Toggled Status for Item ID: ${item.id}`);
     };
 
+    const initials = getInitials(item.name);
+    const avatarColor = getColorFromInitials(item.name);
+
     return (
         <div style={style} className="px-4 py-2 box-border" {...ariaAttributes}>
             <div
@@ -39,11 +65,11 @@ const RowComponent: React.FC<RowProps> = ({ index, style, data, updateItemStatus
             >
                 {/* Avatar Circle */}
                 <div className="flex-shrink-0">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold bg-gradient-to-br ${item.status === 'active' ? 'from-green-500 to-emerald-700' :
-                            item.status === 'pending' ? 'from-amber-400 to-orange-600' :
-                                'from-slate-500 to-slate-700'
-                        }`}>
-                        {item.name.charAt(0)}
+                    <div
+                        className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold"
+                        style={{ backgroundColor: avatarColor }}
+                    >
+                        {initials}
                     </div>
                 </div>
 
