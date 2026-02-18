@@ -1,10 +1,30 @@
+
 import { useDataWorker } from './hooks/useDataWorker'
 import { ListContainer } from './components/VirtualList/ListContainer'
 import { Row } from './components/ListItem/Row'
+import { Profiler } from 'react';
+import type { ProfilerOnRenderCallback } from 'react';
 import './index.css'
 
 function App() {
-  const { data, isLoading, error } = useDataWorker(50000);
+  const { data, isLoading, error, updateItemStatus } = useDataWorker(50000);
+
+  const onRenderCallback: ProfilerOnRenderCallback = (
+    id,
+    phase,
+    actualDuration
+  ) => {
+    if (phase === 'update') {
+      console.log(`[Profiler: ${id}] Phase: ${phase}`);
+      console.log(`Actual Duration: ${actualDuration.toFixed(4)}ms`);
+
+      if (actualDuration < 2) {
+        console.log('%c Performance Goal Met! (< 2ms)', 'color: green; font-weight: bold;');
+      } else {
+        console.warn(`Performance Warning: Render took ${actualDuration.toFixed(4)}ms`);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
@@ -28,7 +48,14 @@ function App() {
             <p>{error}</p>
           </div>
         ) : (
-          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
+          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm relative">
+            {/* Metrics Overlay */}
+            <div className="absolute top-4 right-4 z-10 bg-black/80 border border-slate-700 p-3 rounded-lg text-xs font-mono shadow-lg backdrop-blur-md">
+              <div className="text-slate-400 mb-1">Items in Memory</div>
+              <div className="text-emerald-400 font-bold text-lg">{data.length.toLocaleString()}</div>
+              <div className="mt-2 text-slate-500">Check Console for Profiler</div>
+            </div>
+
             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/80">
               <h2 className="text-xl font-semibold">Data Stream</h2>
               <div className="text-sm px-3 py-1 bg-primary-500/10 text-primary-400 rounded-full border border-primary-500/20">
@@ -37,10 +64,16 @@ function App() {
             </div>
 
             <div className="h-[600px] w-full bg-slate-900/30">
-              <ListContainer
-                data={data}
-                RowComponent={Row}
-              />
+              <Profiler id="VirtualList" onRender={onRenderCallback}>
+                {/* 
+                  @ts-ignore - Row typing mismatch will be fixed by Dev C
+                */}
+                <ListContainer
+                  data={data}
+                  RowComponent={Row}
+                  onUpdateStatus={updateItemStatus}
+                />
+              </Profiler>
             </div>
           </div>
         )}
