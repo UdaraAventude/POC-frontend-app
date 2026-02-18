@@ -3,17 +3,11 @@ import React from 'react';
 import { List } from 'react-window';
 import type { RowComponentProps } from 'react-window';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
-import type { ListItemData } from '../../types/data';
-
-// Expanded definition to carry the update function down to the Row
-type VirtualRowProps = {
-  data: ListItemData[];
-  updateItemStatus: (id: string | number) => void;
-};
+import type { ListItemData, VirtualRowData } from '../../types/data';
 
 interface ListContainerProps {
   data: ListItemData[];
-  RowComponent: React.ComponentType<RowComponentProps<VirtualRowProps>>;
+  RowComponent: React.ComponentType<RowComponentProps<VirtualRowData>>;
   onUpdateStatus: (id: string | number) => void;
 }
 
@@ -26,7 +20,7 @@ export const ListContainer: React.FC<ListContainerProps> = ({ data, RowComponent
   }), [data, onUpdateStatus]);
 
   const renderRow = React.useCallback(
-    (props: RowComponentProps<VirtualRowProps>) => <RowComponent {...props} />,
+    (props: RowComponentProps<VirtualRowData>) => <RowComponent {...props} />,
     [RowComponent]
   );
 

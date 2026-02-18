@@ -43,7 +43,7 @@ export const useDataWorker = (count: number = 50000) => {
     const searchData = useCallback((query: string) => {
         if (workerRef.current) {
             setIsLoading(true);
-            workerRef.current.postMessage({ type: 'SEARCH', payload: query });
+            workerRef.current.postMessage({ type: 'SEARCH', query });
         }
     }, []);
 

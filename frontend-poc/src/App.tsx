@@ -1,13 +1,22 @@
 
+import { useEffect, useState } from 'react';
 import { useDataWorker } from './hooks/useDataWorker'
+import { useDebounce } from './hooks/useDebounce'
 import { ListContainer } from './components/VirtualList/ListContainer'
 import { Row } from './components/ListItem/Row'
+import { Toolbar } from './components/Toolbar'
 import { Profiler } from 'react';
 import type { ProfilerOnRenderCallback } from 'react';
 import './index.css'
 
 function App() {
-  const { data, isLoading, error, updateItemStatus } = useDataWorker(50000);
+  const { data, isLoading, error, searchData, updateItemStatus } = useDataWorker(50000);
+  const [query, setQuery] = useState('');
+  const debouncedQuery = useDebounce(query, 300);
+
+  useEffect(() => {
+    searchData(debouncedQuery);
+  }, [debouncedQuery, searchData]);
 
   const onRenderCallback: ProfilerOnRenderCallback = (
     id,
@@ -63,11 +72,10 @@ function App() {
               </div>
             </div>
 
+            <Toolbar query={query} onQueryChange={setQuery} />
+
             <div className="h-[600px] w-full bg-slate-900/30">
               <Profiler id="VirtualList" onRender={onRenderCallback}>
-                {/* 
-                  @ts-ignore - Row typing mismatch will be fixed by Dev C
-                */}
                 <ListContainer
                   data={data}
                   RowComponent={Row}

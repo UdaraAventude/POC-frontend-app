@@ -1,14 +1,11 @@
 import React from 'react';
-import type { ListItemData } from '../../types/data';
+import type { MouseEvent } from 'react';
 import type { RowComponentProps } from 'react-window';
+import type { VirtualRowData } from '../../types/data';
 
-type VirtualRowProps = {
-    data: ListItemData[];
-};
+type RowProps = RowComponentProps<VirtualRowData>;
 
-type RowProps = RowComponentProps<VirtualRowProps>;
-
-const RowComponent: React.FC<RowProps> = ({ index, style, data }) => {
+const RowComponent: React.FC<RowProps> = ({ index, style, data, updateItemStatus, ariaAttributes }) => {
     // Access the specific item data using the index
     const item = data[index];
 
@@ -21,8 +18,14 @@ const RowComponent: React.FC<RowProps> = ({ index, style, data }) => {
         console.log(`Clicked Item ID: ${item.id}`);
     };
 
+    const handleToggleStatus = (event: MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        updateItemStatus(item.id);
+        console.log(`Toggled Status for Item ID: ${item.id}`);
+    };
+
     return (
-        <div style={style} className="px-4 py-2 box-border">
+        <div style={style} className="px-4 py-2 box-border" {...ariaAttributes}>
             <div
                 onClick={handleClick}
                 className="
@@ -46,11 +49,11 @@ const RowComponent: React.FC<RowProps> = ({ index, style, data }) => {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline">
+                    <div className="flex justify-between items-center gap-2">
                         <p className="text-sm font-semibold text-slate-200 truncate pr-2">
                             {item.name}
                         </p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full border ${item.status === 'active' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                        <span className={`text-xs px-2 py-0.5 rounded-full border whitespace-nowrap ${item.status === 'active' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
                                 item.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
                                     'bg-slate-500/10 text-slate-400 border-slate-500/20'
                             }`}>
@@ -61,6 +64,14 @@ const RowComponent: React.FC<RowProps> = ({ index, style, data }) => {
                         {item.email}
                     </p>
                 </div>
+
+                <button
+                    type="button"
+                    onClick={handleToggleStatus}
+                    className="rounded-md border border-primary-500/30 bg-primary-500/10 px-3 py-1.5 text-[11px] font-medium text-primary-300 hover:bg-primary-500/20"
+                >
+                    Toggle Status
+                </button>
             </div>
         </div>
     );
@@ -68,8 +79,8 @@ const RowComponent: React.FC<RowProps> = ({ index, style, data }) => {
 
 // Custom comparison function for React.memo
 const arePropsEqual = (prevProps: RowProps, nextProps: RowProps) => {
-    const { style: prevStyle, data: prevData, index: prevIndex } = prevProps;
-    const { style: nextStyle, data: nextData, index: nextIndex } = nextProps;
+    const { style: prevStyle, data: prevData, index: prevIndex, updateItemStatus: prevUpdateItemStatus } = prevProps;
+    const { style: nextStyle, data: nextData, index: nextIndex, updateItemStatus: nextUpdateItemStatus } = nextProps;
 
     // 1. Index check
     if (prevIndex !== nextIndex) {
@@ -95,13 +106,10 @@ const arePropsEqual = (prevProps: RowProps, nextProps: RowProps) => {
     // 3. Data check
     // If the data array reference hasn't changed, we don't need to re-render 
     // (assuming immutable updates logic from Dev A).
-    if (prevData === nextData) {
-        return true;
+    if (prevUpdateItemStatus !== nextUpdateItemStatus) {
+        return false;
     }
 
-    // If data array reference changed, check if the specific item at this index has changed.
-    // This allows the Row to skip re-rendering if its specific data is identical 
-    // even if other items in the list changed.
     if (prevData[prevIndex] === nextData[nextIndex]) {
         return true;
     }
