@@ -13,7 +13,12 @@ export interface WorkerResponse {
     message?: string;
 }
 
-export interface WorkerRequest {
-    type: 'GENERATE';
-    count: number;
-}
+export type WorkerRequest =
+    | {
+          type: 'GENERATE';
+          count: number;
+      }
+    | {
+          type: 'SEARCH';
+          query: string;
+      };

@@ -25,20 +25,61 @@ const generateData = (count: number): ListItemData[] => {
     return data;
 };
 
+let cachedData: ListItemData[] = [];
+
+const searchData = (query: string): ListItemData[] => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+        return cachedData;
+    }
+
+    return cachedData.filter((item) => {
+        return (
+            item.name.toLowerCase().includes(normalizedQuery) ||
+            item.email.toLowerCase().includes(normalizedQuery)
+        );
+    });
+};
+
 self.onmessage = (event: MessageEvent<WorkerRequest>) => {
-    const { type, count } = event.data;
+    const { type } = event.data;
 
     if (type === 'GENERATE') {
         try {
             const startTime = performance.now();
-            const items = generateData(count);
+            const items = generateData(event.data.count);
+            cachedData = items;
             const endTime = performance.now();
 
-            console.log(`[Worker] Generated ${count} items in ${(endTime - startTime).toFixed(2)}ms`);
+            console.log(`[Worker] Generated ${items.length} items in ${(endTime - startTime).toFixed(2)}ms`);
 
             const response: WorkerResponse = {
                 type: 'SUCCESS',
                 data: items,
+            };
+
+            self.postMessage(response);
+        } catch (error) {
+            const response: WorkerResponse = {
+                type: 'ERROR',
+                message: error instanceof Error ? error.message : 'Unknown error occurred',
+            };
+            self.postMessage(response);
+        }
+    }
+
+    if (type === 'SEARCH') {
+        try {
+            const startTime = performance.now();
+            const results = searchData(event.data.query);
+            const endTime = performance.now();
+
+            console.log(`[Worker] Search "${event.data.query}" returned ${results.length} items in ${(endTime - startTime).toFixed(2)}ms`);
+
+            const response: WorkerResponse = {
+                type: 'SUCCESS',
+                data: results,
             };
 
             self.postMessage(response);

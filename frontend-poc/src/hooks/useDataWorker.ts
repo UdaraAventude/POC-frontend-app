@@ -7,22 +7,15 @@ export const useDataWorker = (count: number = 50000) => {
     const [error, setError] = useState<string | null>(null);
     const workerRef = useRef<Worker | null>(null);
 
-    const generateData = useCallback(() => {
+    const ensureWorker = useCallback(() => {
         if (workerRef.current) {
-            workerRef.current.terminate();
+            return workerRef.current;
         }
 
-        setIsLoading(true);
-        setError(null);
-
-        // Initialize the worker using Vite's worker support
-        // Note: In Vite, we should use new URL(...) for worker instantiation
         const worker = new Worker(
             new URL('../workers/dataGenerator.worker.ts', import.meta.url),
             { type: 'module' }
         );
-
-        workerRef.current = worker;
 
         worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
             const { type, data: result, message } = event.data;
@@ -31,13 +24,9 @@ export const useDataWorker = (count: number = 50000) => {
                 setData(result);
                 setIsLoading(false);
             } else if (type === 'ERROR') {
-                setError(message || 'Failed to generate data');
+                setError(message || 'Worker request failed');
                 setIsLoading(false);
             }
-
-            // We can terminate after single generation if it's a one-off task,
-            // but usually we keep it for the lifecycle if needed.
-            // For this POC, we'll keep it available until unmount.
         };
 
         worker.onerror = (err) => {
@@ -46,13 +35,38 @@ export const useDataWorker = (count: number = 50000) => {
             setIsLoading(false);
         };
 
+        workerRef.current = worker;
+        return worker;
+    }, []);
+
+    const generateData = useCallback(() => {
+        const worker = ensureWorker();
+        setIsLoading(true);
+        setError(null);
+
         const request: WorkerRequest = {
             type: 'GENERATE',
             count,
         };
 
         worker.postMessage(request);
-    }, [count]);
+    }, [count, ensureWorker]);
+
+    const searchData = useCallback(
+        (query: string) => {
+            const worker = ensureWorker();
+            setIsLoading(true);
+            setError(null);
+
+            const request: WorkerRequest = {
+                type: 'SEARCH',
+                query,
+            };
+
+            worker.postMessage(request);
+        },
+        [ensureWorker]
+    );
 
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
@@ -68,5 +82,5 @@ export const useDataWorker = (count: number = 50000) => {
         };
     }, [generateData]);
 
-    return { data, isLoading, error, regenerate: generateData };
+    return { data, isLoading, error, regenerate: generateData, searchData };
 };
