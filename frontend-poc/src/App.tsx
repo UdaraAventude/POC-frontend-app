@@ -4,6 +4,7 @@ import { useDataWorker } from './hooks/useDataWorker'
 import { useDebounce } from './hooks/useDebounce'
 import { ListContainer } from './components/VirtualList/ListContainer'
 import { Row } from './components/ListItem/Row'
+import { LegacyList } from './components/LegacyList'
 import { Toolbar } from './components/Toolbar'
 import { Profiler } from 'react';
 import type { ProfilerOnRenderCallback } from 'react';
@@ -12,6 +13,7 @@ import './index.css'
 function App() {
   const { data, isLoading, error, searchData, updateItemStatus } = useDataWorker(50000);
   const [query, setQuery] = useState('');
+  const [isLegacyMode, setIsLegacyMode] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
 
   useEffect(() => {
@@ -67,21 +69,36 @@ function App() {
 
             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/80">
               <h2 className="text-xl font-semibold">Data Stream</h2>
-              <div className="text-sm px-3 py-1 bg-primary-500/10 text-primary-400 rounded-full border border-primary-500/20">
-                {data.length.toLocaleString()} Items Loaded
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-sm text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={isLegacyMode}
+                    onChange={(event) => setIsLegacyMode(event.target.checked)}
+                    className="h-4 w-4 accent-amber-400"
+                  />
+                  Enable Legacy Mode (Caution: Lag)
+                </label>
+                <div className="text-sm px-3 py-1 bg-primary-500/10 text-primary-400 rounded-full border border-primary-500/20">
+                  {data.length.toLocaleString()} Items Loaded
+                </div>
               </div>
             </div>
 
             <Toolbar query={query} onQueryChange={setQuery} />
 
             <div className="h-[600px] w-full bg-slate-900/30">
-              <Profiler id="VirtualList" onRender={onRenderCallback}>
-                <ListContainer
-                  data={data}
-                  RowComponent={Row}
-                  onUpdateStatus={updateItemStatus}
-                />
-              </Profiler>
+              {isLegacyMode ? (
+                <LegacyList data={data} onUpdateStatus={updateItemStatus} />
+              ) : (
+                <Profiler id="VirtualList" onRender={onRenderCallback}>
+                  <ListContainer
+                    data={data}
+                    RowComponent={Row}
+                    onUpdateStatus={updateItemStatus}
+                  />
+                </Profiler>
+              )}
             </div>
           </div>
         )}
