@@ -1,5 +1,27 @@
 import { useDataWorker } from './hooks/useDataWorker'
+import { ListContainer } from './components/VirtualList/ListContainer'
+import type { RowComponentProps } from 'react-window';
+import type { ListItemData } from './types/data';
 import './index.css'
+
+// Temporary placeholder for Dev C's Row component
+const PlaceholderRow = ({ index, style, data }: RowComponentProps<{ data: ListItemData[] }>) => {
+  const item = data[index];
+  return (
+    <div style={style} className="flex items-center px-4 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+      <div className="w-10 h-10 rounded-full bg-slate-700 mr-4 flex items-center justify-center text-xs font-bold text-slate-300">
+        {item.name.charAt(0)}
+      </div>
+      <div>
+        <div className="text-slate-200 font-medium">{item.name}</div>
+        <div className="text-slate-500 text-sm">{item.email}</div>
+      </div>
+      <div className={`ml-auto px-2 py-0.5 rounded text-xs ${item.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400'}`}>
+        {item.status}
+      </div>
+    </div>
+  );
+};
 
 function App() {
   const { data, isLoading, error } = useDataWorker(50000);
@@ -34,15 +56,12 @@ function App() {
               </div>
             </div>
 
-            <div className="h-[600px] w-full flex items-center justify-center text-slate-500">
-              {/* Dev B and Dev C will fill this section with the ListContainer and Row components */}
-              <div className="text-center p-12">
-                <p className="mb-4">Data is ready in the main thread.</p>
-                <div className="bg-slate-800/50 p-4 rounded-lg text-xs font-mono text-slate-400 inline-block text-left">
-                  <pre>{JSON.stringify(data.slice(0, 1), null, 2)}</pre>
-                </div>
-                <p className="mt-6 text-sm italic">Waiting for Dev B to implement ListContainer...</p>
-              </div>
+            <div className="h-[600px] w-full bg-slate-900/30">
+              {/* Integrated ListContainer with PlaceholderRow */}
+              <ListContainer
+                data={data}
+                RowComponent={PlaceholderRow}
+              />
             </div>
           </div>
         )}
