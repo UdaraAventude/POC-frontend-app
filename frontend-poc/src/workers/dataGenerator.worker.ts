@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 import type { ListItemData, WorkerRequest, WorkerResponse } from '../types/data';
 
 const firstNames = ['James', 'Mary', 'Robert', 'Patricia', 'John', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth'];

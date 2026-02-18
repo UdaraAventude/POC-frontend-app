@@ -55,9 +55,12 @@ export const useDataWorker = (count: number = 50000) => {
     }, [count]);
 
     useEffect(() => {
-        generateData();
+        const timeoutId = window.setTimeout(() => {
+            generateData();
+        }, 0);
 
         return () => {
+            window.clearTimeout(timeoutId);
             if (workerRef.current) {
                 console.log('[Hook] Terminating worker on unmount');
                 workerRef.current.terminate();

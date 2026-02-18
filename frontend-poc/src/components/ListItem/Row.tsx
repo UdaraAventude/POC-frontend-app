@@ -1,13 +1,12 @@
 import React from 'react';
-import { ListItemData } from '../../types/data';
-import { CSSProperties } from 'react';
+import type { ListItemData } from '../../types/data';
+import type { RowComponentProps } from 'react-window';
 
-// Define props based on react-window requirements and our data
-interface RowProps {
-    index: number;
-    style: CSSProperties;
+type VirtualRowProps = {
     data: ListItemData[];
-}
+};
+
+type RowProps = RowComponentProps<VirtualRowProps>;
 
 const RowComponent: React.FC<RowProps> = ({ index, style, data }) => {
     // Access the specific item data using the index
@@ -23,11 +22,11 @@ const RowComponent: React.FC<RowProps> = ({ index, style, data }) => {
     };
 
     return (
-        <div style={style} className="px-4 py-2">
-            <div 
+        <div style={style} className="px-4 py-2 box-border">
+            <div
                 onClick={handleClick}
                 className="
-                    h-full w-full 
+                    h-full w-full
                     bg-slate-800/40 hover:bg-slate-700/60 
                     border border-slate-700/50 hover:border-primary-500/50 
                     rounded-lg 
@@ -37,11 +36,10 @@ const RowComponent: React.FC<RowProps> = ({ index, style, data }) => {
             >
                 {/* Avatar Circle */}
                 <div className="flex-shrink-0">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold bg-gradient-to-br ${
-                        item.status === 'active' ? 'from-green-500 to-emerald-700' :
-                        item.status === 'pending' ? 'from-amber-400 to-orange-600' :
-                        'from-slate-500 to-slate-700'
-                    }`}>
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold bg-gradient-to-br ${item.status === 'active' ? 'from-green-500 to-emerald-700' :
+                            item.status === 'pending' ? 'from-amber-400 to-orange-600' :
+                                'from-slate-500 to-slate-700'
+                        }`}>
                         {item.name.charAt(0)}
                     </div>
                 </div>
@@ -52,19 +50,15 @@ const RowComponent: React.FC<RowProps> = ({ index, style, data }) => {
                         <p className="text-sm font-semibold text-slate-200 truncate pr-2">
                             {item.name}
                         </p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                            item.status === 'active' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                            item.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                            'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                        }`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full border ${item.status === 'active' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                                item.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                    'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                            }`}>
                             {item.status}
                         </span>
                     </div>
                     <p className="text-xs text-slate-400 truncate">
                         {item.email}
-                    </p>
-                    <p className="text-[10px] text-slate-500 truncate mt-0.5">
-                        {item.bio}
                     </p>
                 </div>
             </div>
