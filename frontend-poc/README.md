@@ -1,183 +1,204 @@
-# DataGrid Pro — High-Performance Client-Side Grid
+# High-Performance React DataGrid — 50,000 Rows
 
-> **50,000 records. 60 FPS. Zero backend.**
-> A production-grade POC demonstrating "Google-Anti-Gravity" frontend engineering.
+**Live Demo:** https://peppy-mochi-5b3f2d.netlify.app  
+**Repo:** https://github.com/UdaraAventude/POC-frontend-app
 
----
-
-## 🏗 Architecture Overview
-
-```
-src/
-├── workers/
-│   └── dataGenerator.worker.ts   # Off-main-thread: generate + search + status toggle
-├── hooks/
-│   ├── useDataWorker.ts           # Worker bridge: lifecycle, optimistic UI, rollback
-│   └── useDebounce.ts             # Input debounce (300ms)
-├── components/
-│   ├── Toolbar.tsx                # Debounced search + router NavLinks
-│   ├── VirtualList/
-│   │   └── ListContainer.tsx      # react-window + AutoSizer
-│   ├── ListItem/
-│   │   └── Row.tsx                # React.memo + custom arePropsEqual
-│   ├── LegacyList.tsx             # .map() rendering (intentional jank demo)
-│   ├── EmptyState.tsx             # Zero-result SVG illustration
-│   └── ToastContainer.tsx         # Rollback notifications (no external lib)
-├── pages/
-│   ├── OptimizedPage.tsx          # Route /    — virtualized + profiled
-│   └── LegacyPage.tsx             # Route /legacy — DOM explosion demo
-└── types/
-    └── data.ts                    # Strict TypeScript interfaces
-```
+> Client-Side Rendering · Web Workers · Virtualization · Optimistic UI · PWA
 
 ---
 
-## 🚀 The Performance Stack
+## 1. The Challenge
 
-### Why Client-Side Rendering (not SSR/Next.js)?
+Modern web applications (Figma, Notion, internal dashboards) must handle massive client-side datasets without sacrificing responsiveness. A naïve `Array.map()` over 50,000 records causes:
 
-For a 50,000-item list, **hydration is the enemy**. Even with Next.js SSR, the browser must "hydrate" the HTML — for 50k nodes this locks the CPU for seconds. We choose:
-
-```
-Vite + React CSR  →  Web Worker  →  Virtualization  →  React.memo
-```
-
-### 1. Web Workers (Off-Main-Thread)
-
-The main thread handles **only UI updates**. Heavy work lives in `dataGenerator.worker.ts`:
-
-| Message        | What it does                              | Thread    |
-|----------------|-------------------------------------------|-----------|
-| `GENERATE`     | Creates 50,000 `ListItemData` objects     | Worker    |
-| `SEARCH`       | Filters `cachedData` (worker-scope cache) | Worker    |
-| `UPDATE_STATUS`| Toggles status, 10% simulated failure     | Worker    |
-| `ROLLBACK`     | Tells UI to revert optimistic update      | → Main    |
-
-### 2. Virtualization (react-window)
-
-Only the **visible rows** exist in the DOM — typically ~12 rows:
-
-```
-50,000 items × 64px  =  3,200,000px total scroll height
-~12 rows actually rendered  =  <300 DOM nodes
-```
-
-### 3. React.memo + Custom Comparator
-
-```ts
-const arePropsEqual = (prev, next) =>
-  prev.index === next.index &&
-  prev.item === next.item &&          // referential equality
-  prev.style.top === next.style.top;  // virtualization position check
-```
-
-**Row renders only when its own data changes** — not when other rows change.
-
-### 4. Optimistic UI + Rollback
-
-```
-User clicks toggle
-↓
-Immediate UI update (0ms user-perceived latency)
-↓
-Worker receives UPDATE_STATUS
-↓
-90% → confirms → updates worker-scope cachedData
-10% → rejects  → sends ROLLBACK → hook reverts → Toast shown
-```
-
-### 5. Debounced Search
-
-```
-Toolbar local state → 300ms debounce → onSearch(query) → Worker SEARCH
-```
-
-The typing updates the input instantly (local state in Toolbar). The heavy filtering only runs after 300ms of silence. Main thread stays free.
+| Problem | Impact |
+|---------|--------|
+| Main thread blocking | Browser freezes during data generation |
+| Input lag | Typing becomes sluggish due to heavy re-renders |
+| DOM explosion | >150,000 nodes exhaust browser memory |
+| High INP | Interaction to Next Paint exceeds 5,000ms |
 
 ---
 
-## 🌐 PWA (Progressive Web App)
+## 2. Architectural Overview
 
-Configured via `vite-plugin-pwa` + Workbox:
+```
+User Input
+    │
+    ├─ Search → Debounce (300ms) ──────────────────────────────────────────┐
+    │                                                                       │
+    └─ Scroll → react-window ─── renders only ~20 visible rows             │
+                    │                                                       ▼
+                    ▼                                           ┌─────────────────────┐
+            ┌──────────────────┐                               │   Web Worker Thread  │
+            │   Main Thread    │  ◄── STATUS_CONFIRMED delta ─ │  GENERATE / SEARCH  │
+            │                  │                               │  UPDATE_STATUS       │
+            │  useDataWorker   │ ──── postMessage ───────────► │  O(1) Map<id,index> │
+            │  (startTrans.)   │                               └─────────────────────┘
+            │  indexMap O(1)   │
+            └──────────────────┘
+```
 
-- **Pre-cache**: All `.js`, `.css`, `.html` assets → offline shell available instantly
-- **Google Fonts**: `StaleWhileRevalidate` for stylesheets, `CacheFirst` (1 year) for font files
-- **Auto-update**: New deployments register seamlessly via `autoUpdate`
+**Key decisions:**
 
-**To test offline:** Open DevTools → Network tab → set to "Offline" → refresh. The app shell loads from cache.
-
----
-
-## 📦 Bundle Analysis
-
-After `npm run build`, open `dist/stats.html` in a browser to see the Rollup treemap:
-
-| Chunk              | Size (gzip) | Role                         |
-|--------------------|-------------|------------------------------|
-| `index.js`         | ~58 kB      | React core + shared utils    |
-| `router.js`        | ~16 kB      | react-router-dom             |
-| `virtualize.js`    | ~5 kB       | react-window + auto-sizer    |
-| `OptimizedPage.js` | ~2 kB       | Lazy-loaded route chunk      |
-| `LegacyPage.js`    | ~1.7 kB     | Lazy-loaded route chunk      |
-| `*.worker.js`      | ~2.8 kB     | Isolated Web Worker bundle   |
-
----
-
-## ✅ "Google Anti-Gravity" Checklist
-
-### 🏎 Performance
-- [x] Main thread idle during data generation (Worker handles it)
-- [x] Scrolling at 60 FPS (Virtualization — only visible rows rendered)
-- [x] Status toggle < 2ms in React Profiler (single-item immutable update)
-- [x] Typing does not drop frames (Debounced + Decoupled state in Toolbar)
-- [x] DOM nodes < 300 in Optimized Mode / > 150,000 in Legacy Mode
-
-### 🏗 Architecture
-- [x] Worker terminates on route navigation (useEffect cleanup)
-- [x] `React.memo` with custom `arePropsEqual` comparator
-- [x] Optimistic UI: instant status update
-- [x] Rollback: 10% failure rate → state reverts → Toast notification
-- [x] `react-router-dom` v6 with lazy-loaded page chunks
-- [x] TypeScript `strict: true`, zero `any` types
-
-### 🌐 Network
-- [x] PWA: offline-capable shell via Workbox pre-cache
-- [x] Netlify SPA redirect + security headers in `netlify.toml`
-- [x] Bundle visualizer: `dist/stats.html` treemap
-- [x] Immutable asset cache headers (1 year) for hashed filenames
-
-### 🎨 UI/UX
-- [x] "Obsidian Glass" dark theme (slate-950 + subtle borders + blur)
-- [x] Shimmer skeleton rows on initial load (match exact row height)
-- [x] Subtle column-header spinner during search (no layout shift)
-- [x] Empty state SVG when search returns zero results
-- [x] ARIA labels on all inputs, regions, tables, and buttons
-- [x] Skip-to-main-content link for keyboard navigation
-- [x] Three-way status pills: emerald (active) / amber (pending) / slate (inactive)
+| Technique | Why |
+|-----------|-----|
+| **Web Worker** | All 50k record generation and filtering off the main thread |
+| **react-window** | Virtualizes the list — only visible rows exist in the DOM |
+| **startTransition** | Marks search result renders as non-urgent, yielding to user input |
+| **Optimistic UI** | Status toggles apply instantly; a 10% failure rate triggers rollback |
+| **O(1) index Map** | Status updates find the target item without scanning 50k entries |
+| **Delta messages** | Worker sends only `{id, status}` on confirm — no full array clone |
+| **React.memo** | `arePropsEqual` prevents row re-renders unless its specific item changes |
 
 ---
 
-## 🛠 Running Locally
+## 3. Performance Metrics
+
+| Metric | 🔴 Legacy Mode | 🟢 Optimized Mode |
+|--------|---------------|------------------|
+| DOM Nodes | 150,000+ | ~180 (constant) |
+| Scroll FPS | 5–10 FPS | 60 FPS |
+| Status Toggle Render | ~800ms | < 2ms |
+| INP (Interaction to Next Paint) | 5,304ms | **48ms** |
+| LCP (Largest Contentful Paint) | — | **0.50s** |
+| CLS (Cumulative Layout Shift) | — | **0.00** |
+| Memory | 300MB+ | Heap-optimized |
+
+---
+
+## 4. Lighthouse Scores (Desktop)
+
+| Category | Score |
+|----------|-------|
+| Performance | 65 Mobile / ~95 Desktop |
+| Accessibility | 85 |
+| Best Practices | **100** |
+| SEO | 91 |
+| PWA | ✅ Installable + Offline |
+
+---
+
+## 5. Project Structure
+
+```
+frontend-poc/
+├── public/
+│   ├── icons/           # PWA icons (192px, 512px)
+│   └── robots.txt
+├── src/
+│   ├── components/
+│   │   ├── ListItem/
+│   │   │   └── Row.tsx          # Virtualized row (React.memo + arePropsEqual)
+│   │   ├── VirtualList/
+│   │   │   └── ListContainer.tsx # react-window + AutoSizer wrapper
+│   │   ├── EmptyState.tsx        # Zero-result search state
+│   │   ├── LegacyList.tsx        # Non-virtualized comparison (role="list")
+│   │   ├── ToastContainer.tsx    # Rollback notification toasts
+│   │   └── Toolbar.tsx           # Search + mode toggle + live counters
+│   ├── hooks/
+│   │   └── useDataWorker.ts      # Worker lifecycle, optimistic UI, toasts
+│   ├── pages/
+│   │   ├── OptimizedPage.tsx     # Route: /
+│   │   └── LegacyPage.tsx        # Route: /legacy
+│   ├── types/
+│   │   └── data.ts               # Shared TypeScript interfaces
+│   ├── workers/
+│   │   └── dataGenerator.worker.ts # Off-main-thread generation, search, toggle
+│   ├── App.tsx                   # Lazy router shell
+│   ├── main.tsx
+│   └── index.css                 # Tailwind v4 + shimmer + toast animations
+├── index.html
+├── vite.config.ts
+├── netlify.toml
+└── tailwind.config.js
+```
+
+---
+
+## 6. How to Run Locally
 
 ```bash
+# Clone
+git clone https://github.com/UdaraAventude/POC-frontend-app.git
+cd POC-frontend-app/frontend-poc
+
+# Install
 npm install
-npm run dev          # http://localhost:5173
-npm run build        # production bundle → dist/
-npm run preview      # preview production build
-```
 
-Open `dist/stats.html` after build to inspect the bundle treemap.
+# Dev server (http://localhost:5173)
+npm run dev
+
+# Production build
+npm run build
+
+# Bundle analysis (opens dist/stats.html)
+npx vite-bundle-visualizer
+```
 
 ---
 
-## 🚢 Deployment (Netlify)
+## 7. Performance Demonstrations
 
-Already configured via `netlify.toml`:
-- SPA redirect (`/*` → `/index.html`)
-- Security headers (X-Frame-Options, Referrer-Policy)
-- Immutable cache for `/assets/*` (1 year)
+### A — React Profiler: Status Toggle
 
-```bash
-npm run build
-# drag dist/ to Netlify, or push to Git + connect repo
-```
+1. Open the live URL → DevTools → **React DevTools** → **Profiler**
+2. Click **Record** → toggle any row's status pill → **Stop**
+3. The flamegraph shows **one small bar** (the toggled row) while 49,999 rows are grey
+
+Expected commit time: **< 2ms**
+
+### B — DOM Node Count
+
+The Toolbar displays a live DOM node counter:
+- **Optimized mode:** ~180 nodes (only visible rows rendered)
+- **Legacy mode:** toggle on — watch the counter climb past 150,000
+
+### C — INP: Interaction to Next Paint
+
+1. DevTools → **Performance** panel → **Record**
+2. Type "smith" quickly in the search box → **Stop**
+3. INP interactions should show **< 50ms** (green)
+
+This is achieved by wrapping worker search results in `startTransition()` — React yields to the keyboard event first, then applies the data update.
+
+### D — Offline Support (PWA)
+
+1. Open the live Netlify URL in Chrome
+2. DevTools → **Network** → set dropdown to **Offline**
+3. Refresh the page — the app loads fully from the Workbox cache
+
+---
+
+## 8. Design Decisions
+
+**Why Client-Side Rendering (CSR) not SSR?**  
+This is a data-heavy dashboard — the dataset is generated client-side with no server. SSR would add hydration cost without any SEO benefit for private dashboard data.
+
+**Why Web Workers instead of `useMemo`?**  
+`useMemo` runs synchronously on the main thread and still blocks the browser during execution. A Worker runs on a separate OS thread — the UI stays interactive at 60 FPS even while generating 50,000 records.
+
+**Why delta messages instead of posting the full array?**  
+Structured clone of a 50,000-item array takes ~50ms. By sending only `{id, newStatus}` on update confirmation, that cost drops to **< 0.1ms**.
+
+---
+
+## 9. PWA Capabilities
+
+Configured via `vite-plugin-pwa` + Workbox `generateSW`:
+
+| Asset type | Strategy |
+|------------|----------|
+| App shell (HTML, JS, CSS) | Pre-cached on install |
+| Google Font stylesheets | StaleWhileRevalidate |
+| Google Font files | CacheFirst (1 year) |
+| Offline fallback | Full app shell served from cache |
+
+---
+
+## 10. Deployment
+
+Hosted on **Netlify** with:
+- SPA redirects (`/* → /index.html 200`) for React Router
+- `Cache-Control: max-age=31536000, immutable` on all `/assets/*` (content-hashed)
+- Security headers: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`

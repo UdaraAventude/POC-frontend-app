@@ -6,7 +6,7 @@ interface ToastContainerProps {
     onDismiss: (id: number) => void;
 }
 
-const variantConfig = {
+const VARIANT_CONFIG = {
     success: {
         bg: 'bg-emerald-950/90',
         border: 'border-emerald-500/30',
@@ -40,44 +40,38 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
             className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"
         >
             {toasts.map((toast) => {
-                const cfg = variantConfig[toast.variant];
+                const cfg = VARIANT_CONFIG[toast.variant];
                 return (
                     <div
                         key={toast.id}
                         role="alert"
-                        className={`
-                            pointer-events-auto relative overflow-hidden
-                            flex items-start gap-3 px-4 py-3 rounded-xl
-                            border backdrop-blur-md shadow-2xl
-                            ${cfg.bg} ${cfg.border}
-                            animate-slide-up
-                        `}
+                        className={`pointer-events-auto relative overflow-hidden flex items-start
+                                    gap-3 px-4 py-3 rounded-xl border backdrop-blur-md shadow-2xl
+                                    animate-slide-up ${cfg.bg} ${cfg.border}`}
                     >
-                        {/* Icon */}
                         <svg
                             className={`w-4 h-4 mt-0.5 flex-shrink-0 ${cfg.icon}`}
                             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                            aria-hidden="true"
                         >
                             <path strokeLinecap="round" strokeLinejoin="round" d={cfg.path} />
                         </svg>
 
-                        {/* Message */}
                         <p className="text-xs text-slate-200 leading-relaxed flex-1">{toast.message}</p>
 
-                        {/* Dismiss button */}
                         <button
                             type="button"
                             onClick={() => onDismiss(toast.id)}
                             aria-label="Dismiss notification"
                             className="text-slate-500 hover:text-slate-300 transition-colors flex-shrink-0"
                         >
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
 
-                        {/* 3-second countdown bar */}
                         <div
+                            aria-hidden="true"
                             className={`absolute bottom-0 left-0 h-0.5 ${cfg.bar} opacity-60`}
                             style={{ animation: 'shrink 3s linear forwards' }}
                         />
