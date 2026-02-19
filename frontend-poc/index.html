@@ -2,11 +2,52 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend-poc</title>
+
+    <!-- Primary meta -->
+    <title>DataGrid Pro — 50k Records at 60 FPS</title>
+    <meta name="description" content="High-performance client-side data grid demonstrating React virtualization, Web Workers, and Optimistic UI with 50,000 records at 60 FPS." />
+    <meta name="author" content="DataGrid Pro Team" />
+
+    <!-- PWA / Theme -->
+    <meta name="theme-color" content="#020617" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DataGrid Pro" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- PWA Icons (referenced in manifest) -->
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:title"       content="DataGrid Pro — High Performance React Grid" />
+    <meta property="og:description" content="50,000 records. 60 FPS. Web Workers. Virtualization. Optimistic UI." />
+    <meta property="og:image"       content="/og-image.png" />
+
+    <!-- Skip to main content for accessibility -->
+    <style>
+      .skip-link {
+        position: absolute;
+        top: -999px;
+        left: 0;
+        z-index: 9999;
+        background: #6366f1;
+        color: white;
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 0 0 8px 0;
+      }
+      .skip-link:focus { top: 0; }
+    </style>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

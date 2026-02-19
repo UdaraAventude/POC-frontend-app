@@ -1,120 +1,133 @@
 import React from 'react';
-import type { MouseEvent } from 'react';
+import clsx from 'clsx';
 import type { RowComponentProps } from 'react-window';
 import type { VirtualRowData } from '../../types/data';
 
 type RowProps = RowComponentProps<VirtualRowData>;
 
-const RowComponent: React.FC<RowProps> = ({ index, style, data, updateItemStatus, ariaAttributes }) => {
-    // Access the specific item data using the index
-    const item = data[index];
+const getInitials = (name: string) =>
+    name
+        .split(' ')
+        .map((part) => part[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase();
 
-    // Safety check in case of index out of bounds (though virtual list handles this usually)
-    if (!item) {
-        return <div style={style} className="p-4 text-slate-500">Loading...</div>;
+const getColorFromInitials = (name: string) => {
+    const colors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500', 'bg-orange-500'];
+    let hash = 0;
+
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    const handleClick = () => {
-        console.log(`Clicked Item ID: ${item.id}`);
-    };
+    return colors[Math.abs(hash) % colors.length];
+};
 
-    const handleToggleStatus = (event: MouseEvent<HTMLButtonElement>) => {
-        event.stopPropagation();
-        updateItemStatus(item.id);
-        console.log(`Toggled Status for Item ID: ${item.id}`);
-    };
+const RowComponent: React.FC<RowProps> = ({ index, style, data, updateItemStatus, ariaAttributes }) => {
+    const item = data[index];
+
+    if (!item) {
+        return (
+            <div style={style} className="px-6 py-3 text-slate-500" {...ariaAttributes}>
+                Loading...
+            </div>
+        );
+    }
+
+    const isEven = index % 2 === 0;
+
+    // Three-way status styling
+    const statusConfig = {
+        active: { pill: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', dot: 'bg-emerald-400' },
+        inactive: { pill: 'bg-slate-700/30 text-slate-400 border-slate-700', dot: 'bg-slate-500' },
+        pending: { pill: 'bg-amber-500/10 text-amber-400 border-amber-500/20', dot: 'bg-amber-400' },
+    } as const;
+    const { pill: statusClasses, dot: dotClass } = statusConfig[item.status] ?? statusConfig.inactive;
 
     return (
-        <div style={style} className="px-4 py-2 box-border" {...ariaAttributes}>
-            <div
-                onClick={handleClick}
-                className="
-                    h-full w-full
-                    bg-slate-800/40 hover:bg-slate-700/60 
-                    border border-slate-700/50 hover:border-primary-500/50 
-                    rounded-lg 
-                    flex items-center space-x-4 px-4 
-                    transition-all duration-200 cursor-pointer shadow-sm
-                "
-            >
-                {/* Avatar Circle */}
-                <div className="flex-shrink-0">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold bg-gradient-to-br ${item.status === 'active' ? 'from-green-500 to-emerald-700' :
-                            item.status === 'pending' ? 'from-amber-400 to-orange-600' :
-                                'from-slate-500 to-slate-700'
-                        }`}>
-                        {item.name.charAt(0)}
-                    </div>
+        <div
+            style={style}
+            className={clsx(
+                'flex items-center px-5 border-b border-slate-800/40 transition-all duration-150 group relative',
+                'border-l-2 border-l-transparent hover:border-l-indigo-500/60',
+                isEven ? 'bg-slate-900' : 'bg-[#0c1220]',
+                'hover:bg-slate-800/50'
+            )}
+            {...ariaAttributes}
+        >
+            <div className="flex items-center gap-3 w-1/4 min-w-[180px]">
+                <div
+                    className={clsx(
+                        'w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white shadow-md',
+                        getColorFromInitials(item.name)
+                    )}
+                >
+                    {getInitials(item.name)}
                 </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center gap-2">
-                        <p className="text-sm font-semibold text-slate-200 truncate pr-2">
-                            {item.name}
-                        </p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full border whitespace-nowrap ${item.status === 'active' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                                item.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                    'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                            }`}>
-                            {item.status}
-                        </span>
-                    </div>
-                    <p className="text-xs text-slate-400 truncate">
-                        {item.email}
+                <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors truncate leading-tight">
+                        {item.name}
                     </p>
+                    <p className="text-[9px] text-slate-600 font-mono tracking-wider mt-0.5">{item.id.toString().slice(-8)}</p>
                 </div>
+            </div>
 
+            <div className="flex-1 min-w-[200px] truncate">
+                <p className="text-sm text-slate-400 truncate">{item.email}</p>
+            </div>
+
+            <div className="w-1/3 hidden lg:block pr-4">
+                <p className="text-xs text-slate-500 truncate italic">{item.bio}</p>
+            </div>
+
+            <div className="w-36 flex items-center justify-end gap-2.5 flex-shrink-0">
+                {/* Status pill with leading dot */}
+                <span
+                    className={clsx(
+                        'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border uppercase tracking-wider',
+                        statusClasses
+                    )}
+                >
+                    <span className={clsx('w-1.5 h-1.5 rounded-full flex-shrink-0', dotClass)} />
+                    {item.status}
+                </span>
                 <button
                     type="button"
-                    onClick={handleToggleStatus}
-                    className="rounded-md border border-primary-500/30 bg-primary-500/10 px-3 py-1.5 text-[11px] font-medium text-primary-300 hover:bg-primary-500/20"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        updateItemStatus(item.id);
+                    }}
+                    className="p-1 rounded-md text-slate-600 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    title="Toggle Status"
+                    aria-label={`Toggle status for ${item.name}`}
                 >
-                    Toggle Status
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
                 </button>
             </div>
         </div>
     );
 };
 
-// Custom comparison function for React.memo
 const arePropsEqual = (prevProps: RowProps, nextProps: RowProps) => {
-    const { style: prevStyle, data: prevData, index: prevIndex, updateItemStatus: prevUpdateItemStatus } = prevProps;
-    const { style: nextStyle, data: nextData, index: nextIndex, updateItemStatus: nextUpdateItemStatus } = nextProps;
-
-    // 1. Index check
-    if (prevIndex !== nextIndex) {
+    if (prevProps.index !== nextProps.index) {
         return false;
     }
 
-    // 2. Style check (Shallow comparison)
-    // React-window creates new style objects, so reference equality check (prevStyle === nextStyle) 
-    // is often false even if values are same. We need shallow comparison.
-    // However, for performance, we can just check reference first.
-    if (prevStyle !== nextStyle) {
-        // Fast shallow check for common properties used in virtualization
-        if (
-            prevStyle.height !== nextStyle.height ||
-            prevStyle.width !== nextStyle.width ||
-            prevStyle.top !== nextStyle.top ||
-            prevStyle.left !== nextStyle.left
-        ) {
-            return false;
-        }
-    }
-
-    // 3. Data check
-    // If the data array reference hasn't changed, we don't need to re-render 
-    // (assuming immutable updates logic from Dev A).
-    if (prevUpdateItemStatus !== nextUpdateItemStatus) {
+    if (prevProps.updateItemStatus !== nextProps.updateItemStatus) {
         return false;
     }
 
-    if (prevData[prevIndex] === nextData[nextIndex]) {
-        return true;
+    const prevItem = prevProps.data[prevProps.index];
+    const nextItem = nextProps.data[nextProps.index];
+
+    if (prevItem !== nextItem) {
+        return false;
     }
 
-    return false;
+    return prevProps.style.top === nextProps.style.top;
 };
 
 export const Row = React.memo(RowComponent, arePropsEqual);
