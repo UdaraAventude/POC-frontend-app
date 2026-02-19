@@ -35,7 +35,7 @@ export const ListContainer: React.FC<ListContainerProps> = ({ data, RowComponent
           return (
             <List
               rowCount={data.length}
-              rowHeight={88}
+              rowHeight={64}
               rowProps={rowProps}
               rowComponent={renderRow}
               overscanCount={5}
