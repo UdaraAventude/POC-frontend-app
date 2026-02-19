@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+  <!-- Background -->
+  <rect width="1280" height="720" fill="#020617"/>
+  
+  <!-- Toolbar -->
+  <rect width="1280" height="64" fill="#0f172a"/>
+  <text x="24" y="42" font-family="system-ui" font-size="20" font-weight="600" fill="#e2e8f0">DataGrid Pro</text>
+  <text x="1100" y="42" font-family="system-ui" font-size="14" fill="#94a3b8">50,000 records</text>
+  
+  <!-- Search bar -->
+  <rect x="24" y="88" width="400" height="40" fill="#1e293b" rx="8"/>
+  <text x="40" y="114" font-family="system-ui" font-size="14" fill="#64748b">Search...</text>
+  
+  <!-- Data Grid Headers -->
+  <rect x="24" y="148" width="1232" height="48" fill="#1e293b"/>
+  <text x="48" y="177" font-family="system-ui" font-size="13" font-weight="600" fill="#cbd5e1">NAME</text>
+  <text x="360" y="177" font-family="system-ui" font-size="13" font-weight="600" fill="#cbd5e1">EMAIL</text>
+  <text x="720" y="177" font-family="system-ui" font-size="13" font-weight="600" fill="#cbd5e1">BIO</text>
+  <text x="1120" y="177" font-family="system-ui" font-size="13" font-weight="600" fill="#cbd5e1">STATUS</text>
+  
+  <!-- Data Rows -->
+  <g id="rows">
+    <!-- Row 1 -->
+    <rect x="24" y="196" width="1232" height="56" fill="#0c1220"/>
+    <circle cx="60" cy="224" r="14" fill="#6366f1"/>
+    <text x="56" y="229" font-family="system-ui" font-size="10" font-weight="700" fill="white">AB</text>
+    <text x="88" y="222" font-family="system-ui" font-size="14" fill="#e2e8f0">Alice Brown</text>
+    <text x="360" y="222" font-family="system-ui" font-size="13" fill="#94a3b8">alice.brown@example.com</text>
+    <text x="720" y="222" font-family="system-ui" font-size="12" fill="#64748b" font-style="italic">Senior Developer</text>
+    <rect x="1100" y="214" width="70" height="20" fill="#10b981" fill-opacity="0.1" rx="10"/>
+    <text x="1115" y="228" font-family="system-ui" font-size="10" font-weight="600" fill="#10b981">ACTIVE</text>
+    
+    <!-- Row 2 -->
+    <rect x="24" y="252" width="1232" height="56" fill="#0a0f1a"/>
+    <circle cx="60" cy="280" r="14" fill="#8b5cf6"/>
+    <text x="56" y="285" font-family="system-ui" font-size="10" font-weight="700" fill="white">CD</text>
+    <text x="88" y="278" font-family="system-ui" font-size="14" fill="#e2e8f0">Charlie Davis</text>
+    <text x="360" y="278" font-family="system-ui" font-size="13" fill="#94a3b8">charlie.d@example.com</text>
+    <text x="720" y="278" font-family="system-ui" font-size="12" fill="#64748b" font-style="italic">Product Manager</text>
+    <rect x="1100" y="270" width="70" height="20" fill="#f59e0b" fill-opacity="0.1" rx="10"/>
+    <text x="1110" y="284" font-family="system-ui" font-size="10" font-weight="600" fill="#f59e0b">PENDING</text>
+    
+    <!-- Row 3 -->
+    <rect x="24" y="308" width="1232" height="56" fill="#0c1220"/>
+    <circle cx="60" cy="336" r="14" fill="#ec4899"/>
+    <text x="56" y="341" font-family="system-ui" font-size="10" font-weight="700" fill="white">EF</text>
+    <text x="88" y="334" font-family="system-ui" font-size="14" fill="#e2e8f0">Emma Foster</text>
+    <text x="360" y="334" font-family="system-ui" font-size="13" fill="#94a3b8">emma.foster@example.com</text>
+    <text x="720" y="334" font-family="system-ui" font-size="12" fill="#64748b" font-style="italic">UX Designer</text>
+    <rect x="1100" y="326" width="70" height="20" fill="#10b981" fill-opacity="0.1" rx="10"/>
+    <text x="1115" y="340" font-family="system-ui" font-size="10" font-weight="600" fill="#10b981">ACTIVE</text>
+    
+    <!-- Row 4 -->
+    <rect x="24" y="364" width="1232" height="56" fill="#0a0f1a"/>
+    <circle cx="60" cy="392" r="14" fill="#14b8a6"/>
+    <text x="56" y="397" font-family="system-ui" font-size="10" font-weight="700" fill="white">GH</text>
+    <text x="88" y="390" font-family="system-ui" font-size="14" fill="#e2e8f0">George Harris</text>
+    <text x="360" y="390" font-family="system-ui" font-size="13" fill="#94a3b8">george.h@example.com</text>
+    <text x="720" y="390" font-family="system-ui" font-size="12" fill="#64748b" font-style="italic">Data Analyst</text>
+    <rect x="1100" y="382" width="70" height="20" fill="#64748b" fill-opacity="0.2" rx="10"/>
+    <text x="1107" y="396" font-family="system-ui" font-size="10" font-weight="600" fill="#94a3b8">INACTIVE</text>
+    
+    <!-- Row 5 -->
+    <rect x="24" y="420" width="1232" height="56" fill="#0c1220"/>
+    <circle cx="60" cy="448" r="14" fill="#f97316"/>
+    <text x="58" y="453" font-family="system-ui" font-size="10" font-weight="700" fill="white">IJ</text>
+    <text x="88" y="446" font-family="system-ui" font-size="14" fill="#e2e8f0">Ivy Johnson</text>
+    <text x="360" y="446" font-family="system-ui" font-size="13" fill="#94a3b8">ivy.johnson@example.com</text>
+    <text x="720" y="446" font-family="system-ui" font-size="12" fill="#64748b" font-style="italic">Marketing Lead</text>
+    <rect x="1100" y="438" width="70" height="20" fill="#10b981" fill-opacity="0.1" rx="10"/>
+    <text x="1115" y="452" font-family="system-ui" font-size="10" font-weight="600" fill="#10b981">ACTIVE</text>
+  </g>
+  
+  <!-- Performance badge -->
+  <rect x="24" y="660" width="140" height="32" fill="#6366f1" fill-opacity="0.2" rx="6"/>
+  <text x="40" y="683" font-family="system-ui" font-size="13" font-weight="600" fill="#818cf8">⚡ 60 FPS</text>
+</svg>
