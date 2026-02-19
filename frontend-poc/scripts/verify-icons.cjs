@@ -1,0 +1,10 @@
+const fs = require('fs');
+const b192 = fs.readFileSync('public/icons/icon-192.png');
+const b512 = fs.readFileSync('public/icons/icon-512.png');
+const sig192 = b192.slice(0, 8).toString('hex');
+const sig512 = b512.slice(0, 8).toString('hex');
+const expected = '89504e470d0a1a0a';
+console.log('icon-192.png signature:', sig192, sig192 === expected ? 'VALID PNG ✓' : 'INVALID');
+console.log('icon-512.png signature:', sig512, sig512 === expected ? 'VALID PNG ✓' : 'INVALID');
+console.log('icon-192.png size:', b192.length, 'bytes');
+console.log('icon-512.png size:', b512.length, 'bytes');
