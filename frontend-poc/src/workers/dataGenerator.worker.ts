@@ -77,7 +77,6 @@ const toggleStatus = (
 
     // Simulate 10% network/server failure for rollback demo
     if (Math.random() < 0.1) {
-        console.warn(`[Worker] Simulated failure for item ${id} — triggering rollback`);
         return { type: 'ROLLBACK', rollbackId: id, rollbackStatus: previousStatus };
     }
 

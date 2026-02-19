@@ -8,9 +8,12 @@ import { EmptyState } from '../components/EmptyState';
 import { ToastContainer } from '../components/ToastContainer';
 import { useDataWorker } from '../hooks/useDataWorker';
 
-// ── Skeleton shimmer rows (only on initial load, not search) ──────────────────
 const SkeletonRow = ({ index }: { index: number }) => (
-    <div className={`flex items-center px-5 h-16 border-b border-slate-800/40 ${index % 2 === 0 ? 'bg-slate-900' : 'bg-[#0c1220]'}`}>
+    <div
+        className={`flex items-center px-5 h-16 border-b border-slate-800/40 ${index % 2 === 0 ? 'bg-slate-900' : 'bg-[#0c1220]'
+            }`}
+        aria-hidden="true"
+    >
         <div className="flex items-center gap-3 w-1/4 min-w-[180px]">
             <div className="w-7 h-7 rounded-full shimmer flex-shrink-0" />
             <div className="space-y-1.5 min-w-0 flex-1">
@@ -30,36 +33,33 @@ const SkeletonRow = ({ index }: { index: number }) => (
     </div>
 );
 
-// ── Column header ─────────────────────────────────────────────────────────────
-const TableHeader = ({ isSearching }: { isSearching: boolean }) => (
+const ColumnHeader = ({ isSearching }: { isSearching: boolean }) => (
     <div
-        role="row"
-        aria-label="Column headers"
-        className="flex items-center px-5 py-2.5 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm
-                   text-[10px] font-mono uppercase tracking-widest text-slate-500 select-none"
+        aria-hidden="true"
+        className="flex items-center px-5 py-2.5 border-b border-slate-800 bg-slate-900/80
+                   backdrop-blur-sm text-[10px] font-mono uppercase tracking-widest
+                   text-slate-400 select-none flex-shrink-0"
     >
-        <span className="w-0.5 mr-5 invisible" aria-hidden="true" />
+        <span className="w-0.5 mr-5 invisible" />
         <div className="flex items-center gap-3 w-1/4 min-w-[180px]">
-            <span className="w-7 invisible" aria-hidden="true" />
+            <span className="w-7 invisible" />
             <span>Name</span>
         </div>
         <div className="flex-1 min-w-[200px]"><span>Email</span></div>
         <div className="w-1/3 hidden lg:block"><span>Bio</span></div>
         <div className="w-36 flex items-center justify-end gap-2">
             <span>Status</span>
-            {/* Subtle searching spinner — only during worker search, not full skeleton */}
             {isSearching && (
                 <div
                     className="w-3 h-3 rounded-full border border-indigo-500/40 border-t-indigo-400 animate-spin"
-                    aria-label="Searching…"
-                    title="Filtering via Web Worker…"
+                    role="status"
+                    aria-label="Filtering records"
                 />
             )}
         </div>
     </div>
 );
 
-// ── Optimized Page (route: /) ──────────────────────────────────────────────────
 const OptimizedPage: React.FC = () => {
     const {
         data, isLoading, isSearching, error,
@@ -74,13 +74,14 @@ const OptimizedPage: React.FC = () => {
         [searchData]
     );
 
-    // Stable reference — useCallback prevents re-creating on each render
     const onRenderCallback = useCallback<ProfilerOnRenderCallback>((id, phase, actualDuration) => {
         if (phase === 'update') {
             const ok = actualDuration < 2;
             const color = ok ? '#34d399' : '#f87171';
-            const label = ok ? `✓ ${actualDuration.toFixed(2)}ms — under 2ms goal` : `⚠ ${actualDuration.toFixed(2)}ms — over budget`;
-            console.log(`%c[Profiler: ${id}] ${label}`, `color: ${color}; font-weight: bold;`);
+            const label = ok
+                ? `✓ ${actualDuration.toFixed(2)}ms`
+                : `⚠ ${actualDuration.toFixed(2)}ms — over 2ms budget`;
+            console.log(`%c[Profiler: ${id}] ${label}`, `color:${color};font-weight:bold`);
         }
     }, []);
 
@@ -95,13 +96,12 @@ const OptimizedPage: React.FC = () => {
             <main id="main-content" className="pt-16 px-4 sm:px-6 pb-6 flex-1 flex flex-col">
                 <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col py-4 gap-3">
 
-                    {/* Panel header */}
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-base font-semibold text-slate-100 tracking-tight">
                                 Optimized Virtual List
                             </h2>
-                            <p className="text-xs text-slate-500 mt-0.5">
+                            <p className="text-xs text-slate-400 mt-0.5">
                                 Web Worker · react-window · Debounce 300ms · Optimistic UI / Rollback
                             </p>
                         </div>
@@ -113,49 +113,47 @@ const OptimizedPage: React.FC = () => {
                         </span>
                     </div>
 
-                    {/* Data panel */}
                     <div
                         role="region"
-                        aria-label="Data table"
+                        aria-label="Data records"
                         className="rounded-xl border border-slate-800/60 bg-slate-900/40 backdrop-blur-md
                                    shadow-[0_20px_60px_rgba(2,6,23,0.6)] overflow-hidden grid-bg flex flex-col"
                         style={{ height: 'calc(100vh - 180px)' }}
                     >
                         {error ? (
                             <div className="flex-1 flex items-center justify-center p-12">
-                                <div className="rounded-xl border border-red-500/30 bg-red-950/30 p-6 text-red-300 text-sm max-w-md text-center" role="alert">
+                                <div
+                                    role="alert"
+                                    className="rounded-xl border border-red-500/30 bg-red-950/30 p-6
+                                               text-red-300 text-sm max-w-md text-center"
+                                >
                                     <p className="font-medium">Worker Error</p>
                                     <p className="text-red-400/70 text-xs mt-1">{error}</p>
                                 </div>
                             </div>
                         ) : (
                             <>
-                                {/* Column headers — always visible; shows spinner during search */}
-                                <TableHeader isSearching={isSearching} />
+                                <ColumnHeader isSearching={isSearching} />
 
                                 <div
                                     className="flex-1 min-h-0"
-                                    role="table"
-                                    aria-label="Records table"
-                                    aria-rowcount={data.length}
+                                    role="list"
+                                    aria-label="Record list"
                                     aria-busy={isLoading || isSearching}
                                 >
                                     {isLoading ? (
-                                        /* Initial generation → full skeleton */
-                                        <div aria-label="Generating data" aria-busy="true">
+                                        <div role="status" aria-label="Generating 50,000 records">
                                             {Array.from({ length: 14 }, (_, i) => (
                                                 <SkeletonRow key={i} index={i} />
                                             ))}
-                                            <div className="flex items-center justify-center py-5 gap-2 text-slate-600 text-xs font-mono">
+                                            <div className="flex items-center justify-center py-5 gap-2 text-slate-500 text-xs font-mono">
                                                 <div className="w-4 h-4 rounded-full border-2 border-indigo-500/40 border-t-indigo-400 animate-spin" aria-hidden="true" />
                                                 <span>Generating 50,000 records off-main-thread…</span>
                                             </div>
                                         </div>
                                     ) : data.length === 0 && activeQuery ? (
-                                        /* Worker returned zero matches */
                                         <EmptyState query={activeQuery} />
                                     ) : (
-                                        /* Fully loaded — virtualized, memoized, 60 FPS */
                                         <Profiler id="VirtualList" onRender={onRenderCallback}>
                                             <ListContainer
                                                 data={data}
@@ -169,9 +167,8 @@ const OptimizedPage: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Footer metadata strip */}
                     {!isLoading && !error && (
-                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-600 px-1">
+                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 px-1">
                             <span>
                                 {data.length.toLocaleString()} records · 64px rows · overscan 5 · &lt;300 DOM nodes
                             </span>
